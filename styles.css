@@ -1,0 +1,81 @@
+.reveal {
+  font-size: 34px;
+}
+
+.reveal h1 {
+  font-size: 1.65em;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.reveal h2 {
+  font-size: 1.05em;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.reveal h3 {
+  font-size: 1.05em;
+}
+
+.reveal p,
+.reveal li {
+  font-size: 0.95em;
+  line-height: 1.35;
+}
+
+.reveal table {
+  font-size: 0.7em;
+}
+
+.reveal table th,
+.reveal table td {
+  padding: 0.35em 0.5em;
+}
+
+.reveal img {
+  max-height: 520px;
+  object-fit: contain;
+}
+
+.reveal video {
+  max-width: 90%;
+  max-height: 560px;
+}
+
+.reveal .compact h1 {
+  font-size: 1.8em;
+}
+
+.reveal .compact h2 {
+  font-size: 1.1em;
+}
+
+.reveal .compact table {
+  font-size: 0.62em;
+}
+
+.overlay-box {
+  background: rgba(255, 255, 255, 0.82);
+  padding: 1.2em;
+  border-radius: 24px;
+  max-width: 900px;
+  margin-top: 240px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+}
+
+.overlay-box p {
+  font-size: 1.05em;
+}
+body {
+  background-color: #f5efe2; /* 米色 */
+  color: #222222;
+}
+
+#quarto-content {
+  background-color: #f5efe2;
+}
+
+main.content {
+  background-color: #f5efe2;
+}

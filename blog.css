@@ -1,0 +1,260 @@
+﻿/* ===============================
+   Quarto Blog Style
+   文件名：blog.css
+   用途：控制 article.qmd 生成的博客网页样式
+   =============================== */
+
+/* 页面整体字体 */
+body {
+  font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  line-height: 1.75;
+}
+
+/* 正文最大宽度 */
+main.content {
+  max-width: 980px;
+}
+
+/* 标题样式 */
+h1, h2, h3 {
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+/* 一级标题 */
+h1 {
+  font-size: 2.4rem;
+}
+
+/* 二级标题 */
+h2 {
+  margin-top: 2.4rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* 三级标题 */
+h3 {
+  margin-top: 1.8rem;
+}
+
+/* 顶部介绍卡片 */
+.hero {
+  padding: 2.2rem;
+  margin: 1.5rem 0 2.5rem 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #f3f6ff, #ffffff);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+}
+
+/* 顶部介绍卡片中的标题 */
+.hero h1 {
+  font-size: 2.5rem;
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+}
+
+/* 顶部介绍卡片中的文字 */
+.hero p {
+  font-size: 1.15rem;
+  color: #374151;
+  margin-bottom: 0;
+}
+
+/* 图片样式 */
+img {
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* 视频样式 */
+video {
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* 表格 */
+table {
+  font-size: 0.95rem;
+  width: 100%;
+}
+
+thead {
+  background-color: #f3f4f6;
+}
+
+/* 公式区域 */
+.math.display {
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+/* 代码块 */
+pre {
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+/* ===== 全局米色背景 ===== */
+
+:root {
+  --bs-body-bg: #f5efe2;
+  --bs-body-color: #222222;
+}
+
+html,
+body {
+  background-color: #f5efe2 !important;
+  color: #222222 !important;
+}
+
+body.quarto-light,
+body.quarto-dark {
+  background-color: #f5efe2 !important;
+}
+
+/* Quarto 页面主体 */
+#quarto-content,
+.page-columns,
+main,
+main.content,
+.content,
+#quarto-document-content {
+  background-color: #f5efe2 !important;
+}
+
+/* 标题区域 */
+.quarto-title-block,
+.quarto-title,
+.quarto-title-meta,
+header#title-block-header {
+  background-color: #f5efe2 !important;
+}
+
+/* 页面外层容器 */
+.quarto-container,
+.container,
+.container-fluid {
+  background-color: #f5efe2 !important;
+}
+
+/* 如果有正文卡片，也强制改掉 */
+div.cell-output-display,
+div.cell,
+section {
+  background-color: transparent !important;
+}
+
+h1 {
+  color: red !important;
+}
+
+/* ===== 全局字体缩小与紧凑排版 ===== */
+
+/* 正文整体缩小 */
+html {
+  font-size: 13px;
+}
+
+body {
+  font-size: 0.88rem;
+  line-height: 1.48;
+}
+
+/* 正文区域更紧凑 */
+main.content {
+  font-size: 0.88rem;
+  line-height: 1.48;
+}
+
+/* 大标题缩小 */
+.quarto-title h1.title {
+  font-size: 2.1rem;
+  line-height: 1.12;
+}
+
+/* 副标题缩小 */
+.quarto-title .subtitle {
+  font-size: 0.95rem;
+}
+
+/* 作者和日期区域缩小 */
+.quarto-title-meta {
+  font-size: 0.78rem;
+}
+
+/* 顶部介绍卡片中的标题缩小 */
+.hero h1 {
+  font-size: 1.85rem;
+  line-height: 1.15;
+}
+
+/* 顶部介绍卡片中的文字缩小 */
+.hero p {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* 一级标题 */
+h1 {
+  font-size: 1.55rem;
+  line-height: 1.18;
+  margin-top: 1.6rem;
+  margin-bottom: 0.65rem;
+}
+
+/* 二级标题 */
+h2 {
+  font-size: 1.25rem;
+  line-height: 1.22;
+  margin-top: 1.3rem;
+  margin-bottom: 0.55rem;
+}
+
+/* 三级标题 */
+h3 {
+  font-size: 1.05rem;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+/* 段落更紧凑 */
+p {
+  margin-top: 0.45rem;
+  margin-bottom: 0.45rem;
+}
+
+/* 列表更紧凑 */
+ul,
+ol {
+  margin-top: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+li {
+  margin-bottom: 0.18rem;
+}
+
+/* 表格字体更小 */
+table {
+  font-size: 0.78rem;
+}
+
+/* 公式区域稍微缩小 */
+.math.display {
+  font-size: 0.85rem;
+  margin-top: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+/* 代码块字体更小 */
+pre,
+code {
+  font-size: 0.78rem;
+}

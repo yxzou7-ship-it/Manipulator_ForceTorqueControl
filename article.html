@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="邹宇翔">
+<meta name="dcterms.date" content="2026-05-23">
+
+<title>article</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="article_files/libs/clipboard/clipboard.min.js"></script>
+<script src="article_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="article_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="article_files/libs/quarto-html/popper.min.js"></script>
+<script src="article_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="article_files/libs/quarto-html/anchor.min.js"></script>
+<link href="article_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="article_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="article_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="article_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="article_files/libs/bootstrap/bootstrap-efbb37e9afcc02144ebbc7afd12a776f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">机械臂力/力矩控制：经典算法、具身智能实践与水下机械臂扩展</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>邹宇翔 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 23, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style>
+html,
+body,
+body.quarto-light,
+#quarto-content,
+.page-columns,
+main,
+main.content,
+.content,
+#quarto-document-content,
+.quarto-title-block,
+.quarto-title,
+.quarto-title-meta,
+header#title-block-header,
+.quarto-container,
+.container,
+.container-fluid {
+  background-color: #f5efe2 !important;
+}
+
+body {
+  color: #222222 !important;
+}
+
+.quarto-title-block {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+</style>
+<section id="交流目标" class="level1">
+<h1>交流目标</h1>
+<p>本文重点关注四个问题：</p>
+<ol type="1">
+<li>学术界常用的机械臂力控算法有哪些？</li>
+<li>工业界，尤其是具身智能和接触操作中，最常用哪些力控策略？</li>
+<li>水下机械臂的力控和陆地机械臂相比，差异在哪里？</li>
+<li>真正实现力控时，最难的问题是什么？</li>
+</ol>
+<hr>
+</section>
+<section id="一力控不是单一算法而是一套层级系统" class="level1">
+<h1>一、力控不是单一算法，而是一套层级系统</h1>
+<p>机械臂力控可以分成三层理解：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>层级</th>
+<th>关注问题</th>
+<th>典型内容</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>底层执行能力</td>
+<td>机器人能否准确输出力矩？</td>
+<td>电流控制、关节力矩控制、摩擦补偿、SEA、力矩传感器</td>
+</tr>
+<tr class="even">
+<td>经典力控算法</td>
+<td>接触时力和运动应该满足什么关系？</td>
+<td>直接力控、力位混合、阻抗控制、导纳控制</td>
+</tr>
+<tr class="odd">
+<td>高级扩展</td>
+<td>如何适应复杂接触、不确定环境和学习策略？</td>
+<td>OSC、变阻抗、MPC、RL、观测器、passivity、energy tank</td>
+</tr>
+</tbody>
+</table>
+<p>一个非常重要的认知是：</p>
+<blockquote class="blockquote">
+<p><strong>关节力矩控制不是完整的任务级力控算法，而是实现阻抗控制、OSC、力位混合控制等算法的底层能力。</strong></p>
+</blockquote>
+<p>很多上层力控算法最终都会输出关节力矩：</p>
+<p><span class="math display">\[
+\tau = J^T W
+\]</span></p>
+<p>其中：</p>
+<ul>
+<li><span class="math inline">\(J\)</span>：机械臂雅可比矩阵；</li>
+<li><span class="math inline">\(W\)</span>：末端任务空间 wrench；</li>
+<li><span class="math inline">\(\tau\)</span>：关节力矩。</li>
+</ul>
+<p>末端 wrench 通常写作：</p>
+<p><span class="math display">\[
+W =
+\begin{bmatrix}
+F_x \\
+F_y \\
+F_z \\
+M_x \\
+M_y \\
+M_z
+\end{bmatrix}
+\]</span></p>
+<p>其中前三维是末端力，后三维是末端力矩。</p>
+<hr>
+</section>
+<section id="二学术界常用的经典力控算法" class="level1">
+<h1>二、学术界常用的经典力控算法</h1>
+<section id="直接力控制-direct-force-control" class="level2">
+<h2 class="anchored" data-anchor-id="直接力控制-direct-force-control">2.1 直接力控制 Direct Force Control</h2>
+<p>直接力控制的目标是让实际接触力 <span class="math inline">\(F\)</span> 跟踪期望接触力 <span class="math inline">\(F_d\)</span>。</p>
+<p>定义力误差：</p>
+<p><span class="math display">\[
+e_F = F_d - F
+\]</span></p>
+<p>一个简单的力控制器可以写成：</p>
+<p><span class="math display">\[
+u_f =
+K_p e_F
++
+K_i \int e_F \, dt
++
+K_d \dot{e}_F
+\]</span></p>
+<p>其中：</p>
+<ul>
+<li><span class="math inline">\(F_d\)</span>：期望接触力；</li>
+<li><span class="math inline">\(F\)</span>：实际测得或估计的接触力；</li>
+<li><span class="math inline">\(e_F\)</span>：力误差；</li>
+<li><span class="math inline">\(u_f\)</span>：力控制器输出；</li>
+<li><span class="math inline">\(K_p,K_i,K_d\)</span>：力控制增益。</li>
+</ul>
+<section id="适用任务" class="level3">
+<h3 class="anchored" data-anchor-id="适用任务">适用任务</h3>
+<p>直接力控适合目标接触力明确的任务，例如：</p>
+<ul>
+<li>恒力打磨；</li>
+<li>恒力抛光；</li>
+<li>推按钮；</li>
+<li>夹持力控制；</li>
+<li>轴向插入力控制；</li>
+<li>柔性物体按压。</li>
+</ul>
+</section>
+<section id="优点" class="level3">
+<h3 class="anchored" data-anchor-id="优点">优点</h3>
+<ul>
+<li>控制目标非常直接；</li>
+<li>可以明确指定接触力大小；</li>
+<li>适合有力传感器或可靠力估计的系统。</li>
+</ul>
+</section>
+<section id="缺点" class="level3">
+<h3 class="anchored" data-anchor-id="缺点">缺点</h3>
+<ul>
+<li>未接触时无法产生真实接触力；</li>
+<li>接触瞬间容易冲击；</li>
+<li>对环境刚度非常敏感；</li>
+<li>刚性环境中容易振荡；</li>
+<li>单独使用时稳定性通常不好。</li>
+</ul>
+</section>
+<section id="问题" class="level3">
+<h3 class="anchored" data-anchor-id="问题">问题</h3>
+<ol type="1">
+<li>真实机械臂上，直接力控一般会单独使用吗？</li>
+<li>高刚度环境下，直接力控为什么容易振荡？</li>
+<li>力传感器滤波延迟会如何影响直接力控稳定性？</li>
+<li>实际工程中，直接力控通常如何和阻抗/导纳结合？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="混合位置力控制-hybrid-positionforce-control" class="level2">
+<h2 class="anchored" data-anchor-id="混合位置力控制-hybrid-positionforce-control">2.2 混合位置/力控制 Hybrid Position/Force Control</h2>
+<p>混合位置/力控制的核心思想是：</p>
+<blockquote class="blockquote">
+<p><strong>某些方向控制位置，某些方向控制力。</strong></p>
+</blockquote>
+<p>经典形式为：</p>
+<p><span class="math display">\[
+u = S_x u_x + S_f u_f
+\]</span></p>
+<p>其中：</p>
+<ul>
+<li><span class="math inline">\(S_x\)</span>：运动/位置控制方向选择矩阵；</li>
+<li><span class="math inline">\(S_f\)</span>：力控制方向选择矩阵；</li>
+<li><span class="math inline">\(u_x\)</span>：运动/位置控制器输出；</li>
+<li><span class="math inline">\(u_f\)</span>：力控制器输出；</li>
+<li><span class="math inline">\(u\)</span>：最终任务空间控制输出。</li>
+</ul>
+<p>通常有：</p>
+<p><span class="math display">\[
+S_x + S_f = I
+\]</span></p>
+<p>例如，机器人沿平面擦拭时：</p>
+<ul>
+<li>平面切向 <span class="math inline">\(x,y\)</span> 方向：控制运动轨迹；</li>
+<li>平面法向 <span class="math inline">\(z\)</span> 方向：控制接触力。</li>
+</ul>
+<p>可以设置：</p>
+<p><span class="math display">\[
+S_x =
+\mathrm{diag}(1,1,0,1,1,1)
+\]</span></p>
+<p><span class="math display">\[
+S_f =
+\mathrm{diag}(0,0,1,0,0,0)
+\]</span></p>
+<p>最终得到：</p>
+<p><span class="math display">\[
+u =
+\begin{bmatrix}
+u_x^{\mathrm{motion}} \\
+u_y^{\mathrm{motion}} \\
+u_z^{\mathrm{force}} \\
+u_{r_x}^{\mathrm{motion}} \\
+u_{r_y}^{\mathrm{motion}} \\
+u_{r_z}^{\mathrm{motion}}
+\end{bmatrix}
+\]</span></p>
+<section id="适用任务-1" class="level3">
+<h3 class="anchored" data-anchor-id="适用任务-1">适用任务</h3>
+<p>混合位置/力控制适合几何约束比较明确的接触任务：</p>
+<ul>
+<li>peg-in-hole；</li>
+<li>沿平面擦拭；</li>
+<li>打磨；</li>
+<li>管道检测；</li>
+<li>螺母旋合；</li>
+<li>插拔连接器；</li>
+<li>沿曲面保持法向接触。</li>
+</ul>
+</section>
+<section id="优点-1" class="level3">
+<h3 class="anchored" data-anchor-id="优点-1">优点</h3>
+<ul>
+<li>很符合接触任务的物理结构；</li>
+<li>可以同时满足运动约束和力约束；</li>
+<li>理论清晰，任务解释性强。</li>
+</ul>
+</section>
+<section id="缺点-1" class="level3">
+<h3 class="anchored" data-anchor-id="缺点-1">缺点</h3>
+<ul>
+<li>必须知道哪些方向控位置、哪些方向控力；</li>
+<li>依赖接触法向和约束坐标系；</li>
+<li>接触法向估计错误会导致控制方向错误；</li>
+<li>对接触检测和模式切换要求高。</li>
+</ul>
+</section>
+<section id="问题-1" class="level3">
+<h3 class="anchored" data-anchor-id="问题-1">问题</h3>
+<ol type="1">
+<li>混合位置/力控制的选择矩阵应该定义在世界坐标系、末端坐标系，还是接触面坐标系？</li>
+<li>如果接触法向未知或者实时变化，如何更新 <span class="math inline">\(S_x,S_f\)</span>？</li>
+<li>曲面擦拭和打磨中，如何估计接触法向？</li>
+<li>插孔任务中，哪些方向应该控力，哪些方向应该控位置？</li>
+<li>如果实际接触不是理想约束，而是有摩擦、间隙和柔性，混合位置/力控制还是否适用？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="阻抗控制-impedance-control" class="level2">
+<h2 class="anchored" data-anchor-id="阻抗控制-impedance-control">2.3 阻抗控制 Impedance Control</h2>
+<p>阻抗控制的核心不是直接命令机器人输出多少力，而是规定机器人末端在接触时表现出什么样的<strong>动态力-运动关系</strong>。</p>
+<p>典型形式为：</p>
+<p><span class="math display">\[
+M_d(\ddot{x}-\ddot{x}_d)
++
+B_d(\dot{x}-\dot{x}_d)
++
+K_d(x-x_d)
+=
+F_{\mathrm{ext}}
+\]</span></p>
+<p>其中：</p>
+<ul>
+<li><span class="math inline">\(M_d\)</span>：期望虚拟惯量；</li>
+<li><span class="math inline">\(B_d\)</span>：期望虚拟阻尼；</li>
+<li><span class="math inline">\(K_d\)</span>：期望虚拟刚度；</li>
+<li><span class="math inline">\(x_d,\dot{x}_d,\ddot{x}_d\)</span>：期望末端运动；</li>
+<li><span class="math inline">\(x,\dot{x},\ddot{x}\)</span>：实际末端运动；</li>
+<li><span class="math inline">\(F_{\mathrm{ext}}\)</span>：外部接触力。</li>
+</ul>
+<p>也可以从控制输出角度写成：</p>
+<p><span class="math display">\[
+F_{\mathrm{cmd}}
+=
+K_d(x_d-x)
++
+B_d(\dot{x}_d-\dot{x})
++
+M_d(\ddot{x}_d-\ddot{x})
+\]</span></p>
+<p>然后通过雅可比转置映射为关节力矩：</p>
+<p><span class="math display">\[
+\tau = J^T F_{\mathrm{cmd}}
+\]</span></p>
+<section id="m_db_dk_d-的物理意义" class="level3">
+<h3 class="anchored" data-anchor-id="m_db_dk_d-的物理意义"><span class="math inline">\(M_d,B_d,K_d\)</span> 的物理意义</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>物理意义</th>
+<th>太小</th>
+<th>太大</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(M_d\)</span></td>
+<td>虚拟质量/惯量</td>
+<td>机器人很轻，容易被推动</td>
+<td>机器人很重，启动和停止迟钝</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(B_d\)</span></td>
+<td>虚拟阻尼</td>
+<td>容易振荡</td>
+<td>运动粘滞，响应慢</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(K_d\)</span></td>
+<td>虚拟刚度</td>
+<td>柔顺，容易偏离目标</td>
+<td>刚硬，接触力大</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="适用任务-2" class="level3">
+<h3 class="anchored" data-anchor-id="适用任务-2">适用任务</h3>
+<p>阻抗控制非常适合：</p>
+<ul>
+<li>人机协作；</li>
+<li>柔顺装配；</li>
+<li>抓取；</li>
+<li>插孔；</li>
+<li>未知环境接触；</li>
+<li>灵巧手操作；</li>
+<li>安全交互；</li>
+<li>水下接触操作。</li>
+</ul>
+</section>
+<section id="优点-2" class="level3">
+<h3 class="anchored" data-anchor-id="优点-2">优点</h3>
+<ul>
+<li>接触稳定性好；</li>
+<li>不需要精确控制某个接触力；</li>
+<li>对未知环境更友好；</li>
+<li>适合与学习策略结合。</li>
+</ul>
+</section>
+<section id="缺点-2" class="level3">
+<h3 class="anchored" data-anchor-id="缺点-2">缺点</h3>
+<ul>
+<li>通常需要比较好的底层力矩控制能力；</li>
+<li>参数不好调；</li>
+<li>高刚度环境仍然可能振荡；</li>
+<li>真实硬件摩擦、回差和力矩带宽会显著影响效果。</li>
+</ul>
+</section>
+<section id="问题-2" class="level3">
+<h3 class="anchored" data-anchor-id="问题-2">问题</h3>
+<ol type="1">
+<li>实际机械臂上如何系统调节 <span class="math inline">\(M_d,B_d,K_d\)</span>？</li>
+<li>振荡时，应该优先降低刚度、提高阻尼，还是降低接触速度？</li>
+<li>阻抗参数是否应该随任务阶段变化？</li>
+<li>底层力矩带宽不足时，阻抗控制会出现什么问题？（这个是否影响电机选型？）</li>
+<li>如果机械臂只有位置/速度控制接口，是否还能实现阻抗控制？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="导纳控制-admittance-control" class="level2">
+<h2 class="anchored" data-anchor-id="导纳控制-admittance-control">2.4 导纳控制 Admittance Control</h2>
+<p>导纳控制和阻抗控制方向相反。</p>
+<p>阻抗控制是：</p>
+<blockquote class="blockquote">
+<p>给定位姿误差，输出力/力矩。</p>
+</blockquote>
+<p>导纳控制是：</p>
+<blockquote class="blockquote">
+<p>测到外力后，生成新的位置/速度参考。</p>
+</blockquote>
+<p>典型形式为：</p>
+<p><span class="math display">\[
+M_d\ddot{x}_r + B_d\dot{x}_r + K_d x_r = F_{\mathrm{ext}}
+\]</span></p>
+<p>其中 <span class="math inline">\(x_r,\dot{x}_r,\ddot{x}_r\)</span> 是由外力产生的参考运动修正量。</p>
+<p>最终给底层位置控制器：</p>
+<p><span class="math display">\[
+x_{\mathrm{cmd}} = x_d + x_r
+\]</span></p>
+<p><span class="math display">\[
+\dot{x}_{\mathrm{cmd}} = \dot{x}_d + \dot{x}_r
+\]</span></p>
+<section id="适用场景" class="level3">
+<h3 class="anchored" data-anchor-id="适用场景">适用场景</h3>
+<p>导纳控制尤其适合：</p>
+<ul>
+<li>底层只能做位置控制的工业机械臂；</li>
+<li>有末端六维力传感器的系统；</li>
+<li>人手拖动示教；</li>
+<li>柔顺跟随；</li>
+<li>接触装配；</li>
+<li>工业打磨和擦拭。</li>
+</ul>
+</section>
+<section id="优点-3" class="level3">
+<h3 class="anchored" data-anchor-id="优点-3">优点</h3>
+<ul>
+<li>适合传统工业机械臂；</li>
+<li>不一定需要关节力矩控制；</li>
+<li>实现路径清晰；</li>
+<li>工程上常见。</li>
+</ul>
+</section>
+<section id="缺点-3" class="level3">
+<h3 class="anchored" data-anchor-id="缺点-3">缺点</h3>
+<ul>
+<li>依赖力传感器；</li>
+<li>滤波延迟会影响稳定性；</li>
+<li>高刚度环境中容易振荡；</li>
+<li>接触检测和模式切换很关键。</li>
+</ul>
+</section>
+<section id="问题-3" class="level3">
+<h3 class="anchored" data-anchor-id="问题-3">问题</h3>
+<ol type="1">
+<li>为什么工业机械臂上导纳控制比阻抗控制更常见？</li>
+<li>导纳控制中的 <span class="math inline">\(M_d,B_d,K_d\)</span> 和阻抗控制中的同名参数物理意义是否完全一样？</li>
+<li>六维力传感器滤波频率如何选择？</li>
+<li>接触瞬间是否应该降低导纳模型刚度或增加阻尼？</li>
+<li>导纳控制在刚性环境中如何保证稳定？</li>
+</ol>
+<hr>
+</section>
+</section>
+</section>
+<section id="三osc为什么它经常和力控一起出现" class="level1">
+<h1>三、OSC：为什么它经常和力控一起出现？</h1>
+<section id="osc-是什么" class="level2">
+<h2 class="anchored" data-anchor-id="osc-是什么">3.1 OSC 是什么？</h2>
+<p>OSC 是 <strong>Operational Space Control</strong>，即操作空间控制或任务空间动力学控制。</p>
+<p>它不是和阻抗控制、导纳控制完全并列的一个“力控目标”，而是一个<strong>任务空间控制框架</strong>。</p>
+<p>OSC 关注的问题是：</p>
+<blockquote class="blockquote">
+<p>如何直接在末端任务空间中定义控制目标，然后映射到关节力矩？</p>
+</blockquote>
+<p>典型形式为：</p>
+<p><span class="math display">\[
+W_{\mathrm{cmd}} =
+\begin{bmatrix}
+F_x \\
+F_y \\
+F_z \\
+M_x \\
+M_y \\
+M_z
+\end{bmatrix}
+\]</span></p>
+<p>其中 <span class="math inline">\(W_{\mathrm{cmd}}\)</span> 是末端 wrench，即三维力加三维力矩。</p>
+<p>然后通过：</p>
+<p><span class="math display">\[
+\tau = J^T W_{\mathrm{cmd}}
+\]</span></p>
+<p>映射为关节力矩。</p>
+<p>更完整的 OSC 还会考虑：</p>
+<ul>
+<li>操作空间惯量；</li>
+<li>重力补偿；</li>
+<li>科氏项补偿；</li>
+<li>关节空间零空间控制；</li>
+<li>多任务优先级；</li>
+<li>奇异点处理。</li>
+</ul>
+</section>
+<section id="osc-和阻抗力位混合的关系" class="level2">
+<h2 class="anchored" data-anchor-id="osc-和阻抗力位混合的关系">3.2 OSC 和阻抗/力位混合的关系</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>概念</th>
+<th>它回答的问题</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>阻抗控制</td>
+<td>机器人应该表现成什么力-运动动态关系？</td>
+</tr>
+<tr class="even">
+<td>力位混合控制</td>
+<td>哪些方向控力，哪些方向控位置？</td>
+</tr>
+<tr class="odd">
+<td>OSC</td>
+<td>如何在任务空间中实现这些目标并映射成关节力矩？</td>
+</tr>
+</tbody>
+</table>
+<p>因此：</p>
+<blockquote class="blockquote">
+<p><strong>OSC 可以实现任务空间阻抗控制，也可以实现力/位混合控制。OSC 是框架，阻抗和力位混合是具体控制目标或控制律。</strong></p>
+</blockquote>
+<p>例如可以写成：</p>
+<p><span class="math display">\[
+W_{\mathrm{cmd}}
+=
+S_x W_{\mathrm{motion}}
++
+S_f W_{\mathrm{force}}
+\]</span></p>
+<p>再映射到关节空间：</p>
+<p><span class="math display">\[
+\tau =
+J^T W_{\mathrm{cmd}}
+\]</span></p>
+<section id="问题-4" class="level3">
+<h3 class="anchored" data-anchor-id="问题-4">问题</h3>
+<ol type="1">
+<li>OSC 和普通任务空间 PD 控制的本质区别是什么？</li>
+<li>OSC 是否必须要求底层可控 torque？</li>
+<li>如果真实机器人只能发位置/速度命令，OSC 是否还能直接用？</li>
+<li>OSC 中的操作空间惯量补偿在真实机器人上有多重要？</li>
+<li>Jacobian 奇异或病态时，OSC 如何处理？</li>
+</ol>
+<hr>
+</section>
+</section>
+</section>
+<section id="四工业界和具身智能中最常用的力控做法" class="level1">
+<h1>四、工业界和具身智能中最常用的力控做法</h1>
+<section id="工业界最常见的组合" class="level2">
+<h2 class="anchored" data-anchor-id="工业界最常见的组合">4.1 工业界最常见的组合</h2>
+<p>工业界最常见的不是复杂的纯理论算法，而是稳定、可调、可维护的组合。</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>工业场景</th>
+<th>常见控制方式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>传统位置控制任务</td>
+<td>位置/速度控制</td>
+</tr>
+<tr class="even">
+<td>拖动示教</td>
+<td>六维力传感器 + 导纳控制</td>
+</tr>
+<tr class="odd">
+<td>打磨/抛光</td>
+<td>导纳控制 + 恒力控制</td>
+</tr>
+<tr class="even">
+<td>插孔/装配</td>
+<td>阻抗控制或导纳控制 + 状态机</td>
+</tr>
+<tr class="odd">
+<td>协作机器人</td>
+<td>关节力矩估计 + 碰撞检测 + 低刚度阻抗</td>
+</tr>
+<tr class="even">
+<td>高端 torque-controlled 机械臂</td>
+<td>Cartesian impedance / OSC</td>
+</tr>
+</tbody>
+</table>
+<p>工业界非常重视：</p>
+<ul>
+<li>安全；</li>
+<li>可解释性；</li>
+<li>可调参；</li>
+<li>稳定性；</li>
+<li>故障可诊断；</li>
+<li>不依赖过度复杂模型。</li>
+</ul>
+<p>因此，在很多真实系统里，完整方案往往是：</p>
+<p><span class="math display">\[
+\text{状态机}
++
+\text{轨迹规划}
++
+\text{导纳/阻抗}
++
+\text{力阈值保护}
++
+\text{接触检测}
++
+\text{异常恢复}
+\]</span></p>
+<p>而不是单独依赖一个算法。</p>
+<hr>
+</section>
+<section id="具身智能中常见做法" class="level2">
+<h2 class="anchored" data-anchor-id="具身智能中常见做法">4.2 具身智能中常见做法</h2>
+<p>具身智能和机器人学习中，学习策略通常不会直接替代底层力控，而是和经典控制器组合。</p>
+<p>常见结构为：</p>
+<p><span class="math display">\[
+\text{视觉/力觉/触觉/本体感知}
+\rightarrow
+\text{Policy}
+\rightarrow
+\text{末端目标或阻抗参数}
+\rightarrow
+\text{底层阻抗/导纳/位置控制}
+\]</span></p>
+<p>Policy 可能输出：</p>
+<ol type="1">
+<li>末端目标位姿；</li>
+<li>末端相对位姿增量；</li>
+<li>期望接触力；</li>
+<li>阻抗参数 <span class="math inline">\(K,B\)</span>；</li>
+<li>力阈值；</li>
+<li>任务阶段；</li>
+<li>是否进入接触模式；</li>
+<li>直接关节 torque。</li>
+</ol>
+<p>但在真实机器人上，<strong>直接输出 torque 的学习策略风险更高</strong>。更常见、更工程化的做法是：</p>
+<blockquote class="blockquote">
+<p><strong>学习策略输出高层目标，底层用稳定的阻抗/导纳/位置控制器执行。</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="isaac-lab-factory-forge-的定位" class="level2">
+<h2 class="anchored" data-anchor-id="isaac-lab-factory-forge-的定位">4.3 Isaac Lab Factory / FORGE 的定位</h2>
+<p>Isaac Lab 中的 Factory 和 FORGE 可以这样理解。</p>
+<section id="factory" class="level3">
+<h3 class="anchored" data-anchor-id="factory">Factory</h3>
+<p>Factory 是接触丰富装配任务环境。它通常是：</p>
+<p><span class="math display">\[
+\text{RL policy}
+\rightarrow
+\Delta x,\Delta R
+\rightarrow
+x_{\mathrm{target}},R_{\mathrm{target}}
+\rightarrow
+\text{任务空间 PD/阻抗式 torque control}
+\rightarrow
+\tau
+\]</span></p>
+<p>也就是说：</p>
+<ul>
+<li>高层 RL 输出末端目标增量；</li>
+<li>底层任务空间阻抗式控制器生成关节力矩；</li>
+<li>接触由 PhysX 仿真器处理。</li>
+</ul>
+</section>
+<section id="forge" class="level3">
+<h3 class="anchored" data-anchor-id="forge">FORGE</h3>
+<p>FORGE 在 Factory 基础上加入：</p>
+<ul>
+<li>force sensing；</li>
+<li>force threshold；</li>
+<li>excessive force penalty；</li>
+<li>dynamics randomization；</li>
+<li>success prediction。</li>
+</ul>
+<p>它更适合称为：</p>
+<blockquote class="blockquote">
+<p><strong>force-aware RL for contact-rich manipulation</strong></p>
+</blockquote>
+<p>而不是传统意义上的显式力控。</p>
+<p>它不是直接做：</p>
+<p><span class="math display">\[
+F_d - F \rightarrow \text{force PID}
+\]</span></p>
+<p>而是：</p>
+<p><span class="math display">\[
+F_{\mathrm{meas}}
+\rightarrow
+\text{observation/reward/penalty}
+\]</span></p>
+<p><span class="math display">\[
+\text{RL policy}
+\rightarrow
+\text{target pose}
+\rightarrow
+\text{task-space impedance-like torque control}
+\]</span></p>
+</section>
+<section id="问题-5" class="level3">
+<h3 class="anchored" data-anchor-id="问题-5">问题</h3>
+<ol type="1">
+<li>具身智能中的 RL policy 应该输出 torque、末端 pose、还是阻抗参数？</li>
+<li>为什么真实机器人上很少直接让 RL 输出关节 torque？</li>
+<li>force-aware RL 和传统力控的关系是什么？</li>
+<li>如何把力传感器数据放进 policy 才不会引入噪声和延迟问题？</li>
+<li>仿真中的接触力惩罚能否迁移到真实机械臂？</li>
+</ol>
+<hr>
+</section>
+</section>
+</section>
+<section id="五前沿力控技术" class="level1">
+<h1>五、前沿力控技术</h1>
+<section id="变阻抗控制-variable-impedance-control" class="level2">
+<h2 class="anchored" data-anchor-id="变阻抗控制-variable-impedance-control">5.1 变阻抗控制 Variable Impedance Control</h2>
+<p>普通阻抗控制中：</p>
+<p><span class="math display">\[
+M_d,B_d,K_d = \mathrm{constant}
+\]</span></p>
+<p>变阻抗控制中：</p>
+<p><span class="math display">\[
+M_d = M_d(x,F,t)
+\]</span></p>
+<p><span class="math display">\[
+B_d = B_d(x,F,t)
+\]</span></p>
+<p><span class="math display">\[
+K_d = K_d(x,F,t)
+\]</span></p>
+<p>也就是说，机器人根据任务阶段、接触力、误差、环境刚度等动态改变自身软硬程度。</p>
+<section id="peg-in-hole-示例" class="level3">
+<h3 class="anchored" data-anchor-id="peg-in-hole-示例">Peg-in-hole 示例</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>阶段</th>
+<th>期望阻抗</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>自由空间接近</td>
+<td>高刚度，高精度</td>
+</tr>
+<tr class="even">
+<td>接近孔口</td>
+<td>降低刚度，避免撞击</td>
+</tr>
+<tr class="odd">
+<td>初始接触</td>
+<td>横向柔顺</td>
+</tr>
+<tr class="even">
+<td>搜索孔位</td>
+<td>横向低刚度</td>
+</tr>
+<tr class="odd">
+<td>插入阶段</td>
+<td>轴向推力，横向柔顺</td>
+</tr>
+<tr class="even">
+<td>插入完成</td>
+<td>提高刚度，保持姿态</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="工程上常变什么" class="level3">
+<h3 class="anchored" data-anchor-id="工程上常变什么">工程上常变什么？</h3>
+<p>最常变的是：</p>
+<p><span class="math display">\[
+K_d,\ B_d
+\]</span></p>
+<p>较少快速改变：</p>
+<p><span class="math display">\[
+M_d
+\]</span></p>
+<p>因为虚拟惯量对应动能：</p>
+<p><span class="math display">\[
+E_M = \frac{1}{2}M_d\dot{x}^2
+\]</span></p>
+<p>如果 <span class="math inline">\(M_d\)</span> 在速度较大时突然改变，可能向系统注入能量。</p>
+</section>
+<section id="问题-6" class="level3">
+<h3 class="anchored" data-anchor-id="问题-6">问题</h3>
+<ol type="1">
+<li>变阻抗中 <span class="math inline">\(K,B,M\)</span> 哪些参数最常在线调整？</li>
+<li>调 <span class="math inline">\(K\)</span> 时如何同步调整 <span class="math inline">\(B\)</span>，避免振荡？</li>
+<li>变阻抗是否需要 passivity 约束？</li>
+<li>任务阶段切换时，阻抗参数如何平滑过渡？</li>
+<li>真实机器人上，变阻抗参数变化过快会导致哪些问题？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="学习型变阻抗" class="level2">
+<h2 class="anchored" data-anchor-id="学习型变阻抗">5.2 学习型变阻抗</h2>
+<p>近年来常见做法是用神经网络或强化学习学习阻抗参数：</p>
+<p><span class="math display">\[
+K = f_\theta(o_t)
+\]</span></p>
+<p><span class="math display">\[
+B = f_\theta(o_t)
+\]</span></p>
+<p>其中 <span class="math inline">\(o_t\)</span> 可以包括：</p>
+<ul>
+<li>末端位姿误差；</li>
+<li>速度；</li>
+<li>接触力；</li>
+<li>触觉；</li>
+<li>图像；</li>
+<li>物体类别；</li>
+<li>任务阶段；</li>
+<li>示教轨迹。</li>
+</ul>
+<p>Policy 也可以同时输出：</p>
+<p><span class="math display">\[
+a_t = [x_d, R_d, K, B]
+\]</span></p>
+<p>即：</p>
+<blockquote class="blockquote">
+<p>同时学习“去哪里”和“以多硬/多软的方式去”。</p>
+</blockquote>
+<section id="风险" class="level3">
+<h3 class="anchored" data-anchor-id="风险">风险</h3>
+<p>神经网络直接输出阻抗参数有稳定性风险，因此通常需要约束：</p>
+<p><span class="math display">\[
+K \succ 0
+\]</span></p>
+<p><span class="math display">\[
+B \succ 0
+\]</span></p>
+<p><span class="math display">\[
+M \succ 0
+\]</span></p>
+<p>常见做法包括：</p>
+<ul>
+<li>只输出对角刚度；</li>
+<li>用 softplus 保证正值；</li>
+<li>限制上下界；</li>
+<li>输出 scaling factor；</li>
+<li>用规则根据 <span class="math inline">\(K\)</span> 计算 <span class="math inline">\(B\)</span>；</li>
+<li>加 passivity constraint；</li>
+<li>加 energy tank。</li>
+</ul>
+</section>
+<section id="问题-7" class="level3">
+<h3 class="anchored" data-anchor-id="问题-7">问题</h3>
+<ol type="1">
+<li>学习阻抗参数时，应该让网络输出 <span class="math inline">\(K,B\)</span>，还是只输出 <span class="math inline">\(K\)</span>？</li>
+<li>如何保证神经网络输出的阻抗参数稳定？</li>
+<li>学习型变阻抗相比手工阶段性变阻抗，优势到底在哪里？</li>
+<li>学习的阻抗参数能否跨任务迁移？</li>
+<li>是否有必要学习 <span class="math inline">\(M\)</span>，还是保持 <span class="math inline">\(M\)</span> 常数更稳？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="passivity-energy-tank" class="level2">
+<h2 class="anchored" data-anchor-id="passivity-energy-tank">5.3 Passivity / Energy Tank</h2>
+<p>变阻抗和学习控制的核心风险是：</p>
+<blockquote class="blockquote">
+<p>控制器可能向机器人-环境系统注入能量，破坏接触稳定性。</p>
+</blockquote>
+<p>虚拟弹簧势能定义为</p>
+<p><span class="math display">\[
+E_K = \frac{1}{2} e^T K_d e
+\]</span></p>
+<p>其中任务空间误差为</p>
+<p><span class="math display">\[
+e = x - x_d
+\]</span></p>
+<p>这里 <span class="math inline">\(\boldsymbol x\)</span> 表示机械臂末端当前任务空间位姿，<span class="math inline">\(\boldsymbol x_{\mathrm d}\)</span> 表示目标位姿。若考虑完整的六维任务空间，则可写为</p>
+<p><span class="math display">\[
+e =
+\begin{bmatrix}
+p - p_d \\
+e_R
+\end{bmatrix}
+\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol p - \boldsymbol p_{\mathrm d}\)</span> 为位置误差，<span class="math inline">\(\boldsymbol e_R\)</span> 为姿态误差，例如可由旋转矩阵的李代数误差表示为</p>
+<p><span class="math display">\[
+e_R = \mathrm{Log}(R_d^T R)
+\]</span></p>
+<p>虚拟惯量动能定义为</p>
+<p><span class="math display">\[
+E_M = \frac{1}{2} \dot e^T M_d \dot e
+\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[
+\dot e = \dot x - \dot x_d
+\]</span></p>
+<p>阻尼耗能功率定义为</p>
+<p><span class="math display">\[
+P_B = \dot e^T B_d \dot e
+\]</span></p>
+<p>其中 <span class="math inline">\(K_{\mathrm d}\)</span>、<span class="math inline">\(M_{\mathrm d}\)</span> 和 <span class="math inline">\(B_{\mathrm d}\)</span> 分别为期望刚度矩阵、期望惯量矩阵和期望阻尼矩阵，通常要求它们为对称正定或半正定矩阵，以保证对应的能量项非负。</p>
+<p>如果 <span class="math inline">\(K_d\)</span> 或 <span class="math inline">\(M_d\)</span> 在误差较大时突然增大，就可能使系统能量突然增加。</p>
+<p>Passivity 和 energy tank 的思想是：</p>
+<blockquote class="blockquote">
+<p>给控制器一个能量账户，只有能量账户允许时，才允许控制器改变参数或输出更激进的动作。</p>
+</blockquote>
+<section id="问题-8" class="level3">
+<h3 class="anchored" data-anchor-id="问题-8">问题</h3>
+<ol type="1">
+<li>实际机器人上是否真的会使用 energy tank？</li>
+<li>Passivity observer/controller 在工程中好用吗？</li>
+<li>变阻抗系统如何证明稳定性？</li>
+<li>如果加入学习策略，如何仍然保证 passivity？</li>
+<li>稳定性证明和工程调参之间如何平衡？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="mpc-接触优化控制" class="level2">
+<h2 class="anchored" data-anchor-id="mpc-接触优化控制">5.4 MPC / 接触优化控制</h2>
+<p>MPC 可以将接触力、末端轨迹、摩擦约束、力矩限制等统一写进优化问题：</p>
+<p><span class="math display">\[
+\min_{x,u,F}
+\sum_{t=0}^{T}
+\ell(x_t,u_t,F_t)
+\]</span></p>
+<p>约束包括：</p>
+<p><span class="math display">\[
+x_{t+1} = f(x_t,u_t,F_t)
+\]</span></p>
+<p><span class="math display">\[
+F_t \in \mathcal{C}_{\mathrm{friction}}
+\]</span></p>
+<p><span class="math display">\[
+\tau_{\min} \leq \tau_t \leq \tau_{\max}
+\]</span></p>
+<p>它适合：</p>
+<ul>
+<li>灵巧手操作；</li>
+<li>多接触规划；</li>
+<li>推动物体；</li>
+<li>接触切换；</li>
+<li>复杂装配。</li>
+</ul>
+<p>缺点是：</p>
+<ul>
+<li>接触模型难；</li>
+<li>优化计算量大；</li>
+<li>摩擦和接触切换不光滑；</li>
+<li>实时性要求高。</li>
+</ul>
+<section id="问题-9" class="level3">
+<h3 class="anchored" data-anchor-id="问题-9">问题</h3>
+<ol type="1">
+<li>MPC 在接触任务中最难建模的是摩擦、接触切换，还是物体动力学？</li>
+<li>Contact-implicit MPC 和传统力控如何结合？</li>
+<li>MPC 是否适合高频力控，还是更适合低频规划？</li>
+<li>灵巧手中，MPC 和阻抗控制如何分层？</li>
+<li>真实机器人上，MPC 的实时性如何保证？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="扰动观测器和无传感器力估计" class="level2">
+<h2 class="anchored" data-anchor-id="扰动观测器和无传感器力估计">5.5 扰动观测器和无传感器力估计</h2>
+<p>很多机器人没有末端六维力传感器，或者传感器受噪声、漂移、安装位置影响，因此常用外力估计方法：</p>
+<ul>
+<li>disturbance observer, DOB；</li>
+<li>momentum observer；</li>
+<li>extended state observer, ESO；</li>
+<li>Kalman filter；</li>
+<li>motor current-based force estimation；</li>
+<li>Gaussian Process residual model。</li>
+</ul>
+<p>基本思想是：</p>
+<p><span class="math display">\[
+r_\tau =
+\tau_{\mathrm{meas}}
+-
+\hat{\tau}_{\mathrm{model}}
+\]</span></p>
+<p>其中：</p>
+<p><span class="math display">\[
+\hat{\tau}_{\mathrm{model}}
+=
+\hat{M}(q)\ddot{q}
++
+\hat{C}(q,\dot{q})\dot{q}
++
+\hat{g}(q)
++
+\hat{\tau}_f
+\]</span></p>
+<p>残差：</p>
+<p><span class="math display">\[
+r_\tau
+\approx
+J^TF_{\mathrm{ext}}
++
+\tau_{\mathrm{model\ error}}
++
+\tau_{\mathrm{noise}}
+\]</span></p>
+<p>如果模型足够好，就可以从残差估计外力。</p>
+<section id="问题-10" class="level3">
+<h3 class="anchored" data-anchor-id="问题-10">问题</h3>
+<ol type="1">
+<li>没有六维力传感器时，基于电流的力估计能做到什么程度？</li>
+<li>外力观测器最怕哪些模型误差？</li>
+<li>摩擦和外力如何区分？</li>
+<li>观测器估计的外力能否直接用于导纳控制？</li>
+<li>水下机械臂中，如何区分接触力和水动力扰动？</li>
+</ol>
+<hr>
+</section>
+</section>
+</section>
+<section id="六水下机械臂力控和陆地机械臂有什么不同" class="level1">
+<h1>六、水下机械臂力控和陆地机械臂有什么不同？</h1>
+<p>水下机械臂的经典控制框架仍然可以使用：</p>
+<ul>
+<li>直接力控；</li>
+<li>力位混合；</li>
+<li>阻抗控制；</li>
+<li>导纳控制；</li>
+<li>OSC；</li>
+<li>变阻抗；</li>
+<li>观测器；</li>
+<li>MPC；</li>
+<li>RL。</li>
+</ul>
+<p>但是水下环境引入了额外困难。</p>
+<section id="水下多了哪些物理项" class="level2">
+<h2 class="anchored" data-anchor-id="水下多了哪些物理项">6.1 水下多了哪些物理项？</h2>
+<p>陆地机械臂动力学可以简化为：</p>
+<p><span class="math display">\[
+M(q)\ddot{q}
++
+C(q,\dot{q})\dot{q}
++
+g(q)
++
+\tau_f
+=
+\tau
++
+J^TF_{\mathrm{ext}}
+\]</span></p>
+<p>水下机械臂更接近：</p>
+<p><span class="math display">\[
+M(q)\ddot{q}
++
+C(q,\dot{q})\dot{q}
++
+g(q)
++
+\tau_f
++
+\tau_{\mathrm{added\ mass}}
++
+\tau_{\mathrm{drag}}
++
+\tau_{\mathrm{buoyancy}}
++
+\tau_{\mathrm{current}}
++
+\tau_{\mathrm{tether}}
+=
+\tau
++
+J^TF_{\mathrm{contact}}
+\]</span></p>
+<p>额外项包括：</p>
+<ol type="1">
+<li>水阻 drag；</li>
+<li>附加质量 added mass；</li>
+<li>浮力和浮力残差；</li>
+<li>洋流扰动；</li>
+<li>涡流；</li>
+<li>脐带缆拖曳；</li>
+<li>浮动基座耦合；</li>
+<li>水下传感器噪声和延迟。</li>
+</ol>
+</section>
+<section id="水下外力估计更困难" class="level2">
+<h2 class="anchored" data-anchor-id="水下外力估计更困难">6.2 水下外力估计更困难</h2>
+<p>陆地上可以粗略写成：</p>
+<p><span class="math display">\[
+F_{\mathrm{meas}}
+\approx
+F_{\mathrm{contact}}
++
+F_{\mathrm{model\ error}}
++
+F_{\mathrm{noise}}
+\]</span></p>
+<p>水下更接近：</p>
+<p><span class="math display">\[
+F_{\mathrm{meas}}
+\approx
+F_{\mathrm{contact}}
++
+F_{\mathrm{hydro}}
++
+F_{\mathrm{buoyancy\ residual}}
++
+F_{\mathrm{current}}
++
+F_{\mathrm{tether}}
++
+F_{\mathrm{model\ error}}
++
+F_{\mathrm{noise}}
+\]</span></p>
+<p>所以水下力控最难的不是公式，而是：</p>
+<blockquote class="blockquote">
+<p><strong>测到的外力不一定是接触力。</strong></p>
+</blockquote>
+</section>
+<section id="阻抗导纳参数在水下的含义会变化" class="level2">
+<h2 class="anchored" data-anchor-id="阻抗导纳参数在水下的含义会变化">6.3 阻抗/导纳参数在水下的含义会变化</h2>
+<p>水本身提供真实阻尼，因此虚拟阻尼 <span class="math inline">\(B_d\)</span> 会和真实水阻叠加。</p>
+<p>水下还有附加质量，因此虚拟惯量 <span class="math inline">\(M_d\)</span> 会和流体惯性耦合。</p>
+<p>所以在水下：</p>
+<p><span class="math display">\[
+M_{\mathrm{effective}}
+=
+M_d + M_{\mathrm{added}}
+\]</span></p>
+<p><span class="math display">\[
+B_{\mathrm{effective}}
+=
+B_d + B_{\mathrm{hydro}}
+\]</span></p>
+<p>这会导致：</p>
+<ul>
+<li>同样的阻抗参数在水下更迟钝；</li>
+<li>快速运动时水阻显著增大；</li>
+<li>接触检测更容易被水流误触发；</li>
+<li>导纳控制可能被水流“推着走”。</li>
+</ul>
+</section>
+<section id="uvms-的浮动基座问题" class="level2">
+<h2 class="anchored" data-anchor-id="uvms-的浮动基座问题">6.4 UVMS 的浮动基座问题</h2>
+<p>如果机械臂安装在 ROV/AUV 上，就形成 UVMS：</p>
+<p><span class="math display">\[
+\text{UVMS}
+=
+\text{Underwater Vehicle-Manipulator System}
+\]</span></p>
+<p>这时末端施力会反作用于载体：</p>
+<p><span class="math display">\[
+F_{\mathrm{end-effector}}
+\rightarrow
+\text{vehicle motion}
+\rightarrow
+\text{end-effector pose error}
+\]</span></p>
+<p>因此水下力控往往不只是机械臂控制，而是：</p>
+<p><span class="math display">\[
+\text{机械臂}
++
+\text{载体}
++
+\text{推进器}
++
+\text{水动力}
++
+\text{接触环境}
+\]</span></p>
+<p>共同耦合。</p>
+</section>
+<section id="水下机械臂常用策略" class="level2">
+<h2 class="anchored" data-anchor-id="水下机械臂常用策略">6.5 水下机械臂常用策略</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>问题</th>
+<th>常见策略</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>水阻和附加质量</td>
+<td>水动力建模 + 参数辨识</td>
+</tr>
+<tr class="even">
+<td>洋流扰动</td>
+<td>DOB/ESO/鲁棒控制</td>
+</tr>
+<tr class="odd">
+<td>浮力残差</td>
+<td>静态多姿态标定</td>
+</tr>
+<tr class="even">
+<td>接触力不可分离</td>
+<td>水动力补偿后再估计接触力</td>
+</tr>
+<tr class="odd">
+<td>底层只支持位置控制</td>
+<td>导纳控制</td>
+</tr>
+<tr class="even">
+<td>浮动基座耦合</td>
+<td>UVMS 协调控制</td>
+</tr>
+<tr class="odd">
+<td>传感器噪声大</td>
+<td>多传感器融合</td>
+</tr>
+<tr class="even">
+<td>仿真到真实差距大</td>
+<td>domain randomization + 实验辨识</td>
+</tr>
+</tbody>
+</table>
+<section id="问题-11" class="level3">
+<h3 class="anchored" data-anchor-id="问题-11">问题</h3>
+<ol type="1">
+<li>水下末端力传感器测到的力，如何区分接触力和水动力？</li>
+<li>水下机械臂更适合阻抗控制还是导纳控制？</li>
+<li>如果基座是 ROV/AUV，机械臂力控和载体 station keeping 如何协调？</li>
+<li>水下阻抗参数是否需要重新辨识？</li>
+<li>如何辨识水下等效阻尼和附加质量？</li>
+<li>水下接触检测如何避免被水流误触发？</li>
+<li>水下机械臂只支持位置/速度控制时，如何实现稳定接触？</li>
+<li>水下仿真中，水动力模型需要精确到什么程度才对力控有用？</li>
+</ol>
+<hr>
+</section>
+</section>
+</section>
+<section id="七真实力控实现中的核心难点" class="level1">
+<h1>七、真实力控实现中的核心难点</h1>
+<section id="底层力矩源是否可信" class="level2">
+<h2 class="anchored" data-anchor-id="底层力矩源是否可信">7.1 底层力矩源是否可信</h2>
+<p>力控最终依赖机器人能否准确输出力矩。</p>
+<p>需要关注：</p>
+<ul>
+<li>电流测量是否准确；</li>
+<li><span class="math inline">\(K_t\)</span> 是否标定；</li>
+<li>电流环带宽是否足够；</li>
+<li>减速器效率是否已知；</li>
+<li>摩擦、回差、齿槽转矩是否补偿；</li>
+<li>温升后 <span class="math inline">\(K_t\)</span> 和电阻是否变化；</li>
+<li>关节力矩传感器是否有漂移。</li>
+</ul>
+<section id="应该问" class="level3">
+<h3 class="anchored" data-anchor-id="应该问">应该问</h3>
+<ol type="1">
+<li>什么样的底层力矩带宽才适合做阻抗/OSC？</li>
+<li>没有关节力矩传感器，只靠电流估计力矩是否够用？</li>
+<li>摩擦补偿对力控性能影响有多大？</li>
+<li>实际系统中，力控失败最常见是算法问题还是硬件问题？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="接触检测与模式切换" class="level2">
+<h2 class="anchored" data-anchor-id="接触检测与模式切换">7.2 接触检测与模式切换</h2>
+<p>从自由空间到接触空间是力控最容易出问题的阶段。</p>
+<p>难点包括：</p>
+<ul>
+<li>力阈值如何设置；</li>
+<li>滤波延迟如何处理；</li>
+<li>接触瞬间如何避免冲击；</li>
+<li>位置控制如何切换到力控/阻抗/导纳；</li>
+<li>接触丢失后如何恢复。</li>
+</ul>
+<section id="应该问-1" class="level3">
+<h3 class="anchored" data-anchor-id="应该问-1">应该问</h3>
+<ol type="1">
+<li>接触检测一般用力阈值、速度突变、力矩残差，还是多信号融合？</li>
+<li>接触前是否必须降低速度和刚度？</li>
+<li>模式切换时如何保证控制输入连续？</li>
+<li>接触瞬间最常见的振荡原因是什么？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="阻抗导纳参数调节" class="level2">
+<h2 class="anchored" data-anchor-id="阻抗导纳参数调节">7.3 阻抗/导纳参数调节</h2>
+<p>力控论文里写 <span class="math inline">\(M,B,K\)</span> 很简单，但真实调参很难。</p>
+<section id="应该问-2" class="level3">
+<h3 class="anchored" data-anchor-id="应该问-2">应该问</h3>
+<ol type="1">
+<li>阻抗参数有没有系统化调参流程？</li>
+<li>如何根据环境刚度选择 <span class="math inline">\(K_d\)</span>？</li>
+<li><span class="math inline">\(B_d\)</span> 是否应该按临界阻尼公式计算？</li>
+<li>为什么仿真中稳定的参数，到真实机器人会振荡？</li>
+<li>高刚度环境下，应该优先调低机器人刚度，还是降低接触速度？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="力传感器滤波与延迟" class="level2">
+<h2 class="anchored" data-anchor-id="力传感器滤波与延迟">7.4 力传感器、滤波与延迟</h2>
+<p>力传感器不是越灵敏越好，因为力控系统对延迟非常敏感。</p>
+<section id="应该问-3" class="level3">
+<h3 class="anchored" data-anchor-id="应该问-3">应该问</h3>
+<ol type="1">
+<li>六维力传感器的滤波频率如何选？</li>
+<li>力信号延迟对导纳控制稳定性有什么影响？</li>
+<li>如何处理力传感器零漂？</li>
+<li>力传感器安装在手腕和指尖有何区别？</li>
+<li>力信号和机器人状态不同步会带来什么问题？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="接触法向与任务坐标系" class="level2">
+<h2 class="anchored" data-anchor-id="接触法向与任务坐标系">7.5 接触法向与任务坐标系</h2>
+<p>混合力位控制和打磨、擦拭、插孔都依赖正确的任务坐标系。</p>
+<section id="应该问-4" class="level3">
+<h3 class="anchored" data-anchor-id="应该问-4">应该问</h3>
+<ol type="1">
+<li>力控方向应该定义在世界系、末端系还是接触面系？</li>
+<li>接触法向如何在线估计？</li>
+<li>曲面接触时，控制方向如何随曲率变化？</li>
+<li>法向估计错误会导致什么失败模式？</li>
+<li>是否应该用视觉、力觉、触觉共同估计接触面？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="仿真到真实迁移" class="level2">
+<h2 class="anchored" data-anchor-id="仿真到真实迁移">7.6 仿真到真实迁移</h2>
+<p>仿真接触很难完全真实。</p>
+<p>差异来自：</p>
+<ul>
+<li>摩擦模型；</li>
+<li>接触刚度；</li>
+<li>接触阻尼；</li>
+<li>几何误差；</li>
+<li>传感器噪声；</li>
+<li>执行器带宽；</li>
+<li>关节摩擦；</li>
+<li>柔性变形；</li>
+<li>控制周期；</li>
+<li>延迟。</li>
+</ul>
+<section id="应该问-5" class="level3">
+<h3 class="anchored" data-anchor-id="应该问-5">应该问</h3>
+<ol type="1">
+<li>Isaac Sim / Isaac Lab 中的 contact force 对真实力控有多大参考价值？</li>
+<li>仿真里调出的阻抗参数能否直接迁移？</li>
+<li>真实 peg-in-hole 中，最难模拟的是摩擦、倒角、微小间隙还是柔性？</li>
+<li>domain randomization 对力控 sim-to-real 是否真的有效？</li>
+<li>如何设计最小真实实验来校准仿真接触参数？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="学习方法与传统控制如何结合" class="level2">
+<h2 class="anchored" data-anchor-id="学习方法与传统控制如何结合">7.7 学习方法与传统控制如何结合</h2>
+<p>学习方法很强，但直接替代控制器风险高。</p>
+<section id="应该问-6" class="level3">
+<h3 class="anchored" data-anchor-id="应该问-6">应该问</h3>
+<ol type="1">
+<li>RL policy 最适合输出什么：末端 pose、阻抗参数、力目标，还是 torque？</li>
+<li>如何约束学习策略不输出危险动作？</li>
+<li>学习策略和阻抗控制谁负责稳定性？</li>
+<li>force-aware RL 是否能替代显式力控？</li>
+<li>真实机器人上是否应该保留传统控制器作为 safety layer？</li>
+</ol>
+<hr>
+</section>
+</section>
+</section>
+<section id="八isaac-lab-实验逻辑" class="level1">
+<h1>八、Isaac Lab 实验逻辑</h1>
+<p>如果我已经跑通以下三个任务，可以这样解释。</p>
+<section id="differential-ik" class="level2">
+<h2 class="anchored" data-anchor-id="differential-ik">8.1 Differential IK</h2>
+<p>定位：</p>
+<blockquote class="blockquote">
+<p>任务空间位置控制 baseline，不是力控。</p>
+</blockquote>
+<p>核心：</p>
+<p><span class="math display">\[
+\dot{x} = J(q)\dot{q}
+\]</span></p>
+<p><span class="math display">\[
+\dot{q}=J^\dagger\dot{x}
+\]</span></p>
+<p>意义：</p>
+<ul>
+<li>理解任务空间位姿控制；</li>
+<li>理解 Jacobian；</li>
+<li>作为纯位置控制对照组；</li>
+<li>说明单纯位置控制接触刚性环境时会产生不可控接触力。</li>
+</ul>
+</section>
+<section id="osc-力位混合控制示例" class="level2">
+<h2 class="anchored" data-anchor-id="osc-力位混合控制示例">8.2 OSC 力/位混合控制示例</h2>
+<p>定位：</p>
+<blockquote class="blockquote">
+<p>显式任务空间力控/阻抗/力位混合控制示例。</p>
+</blockquote>
+<p>核心：</p>
+<p><span class="math display">\[
+W_{\mathrm{cmd}}
+=
+S_xW_{\mathrm{motion}}
++
+S_fW_{\mathrm{force}}
+\]</span></p>
+<p><span class="math display">\[
+\tau =
+J^T W_{\mathrm{cmd}}
+\]</span></p>
+<p>意义：</p>
+<ul>
+<li>可以指定哪些方向控运动；</li>
+<li>可以指定哪些方向控 wrench；</li>
+<li>是理解经典力控的核心示例。</li>
+</ul>
+</section>
+<section id="factory-forge-peginsert" class="level2">
+<h2 class="anchored" data-anchor-id="factory-forge-peginsert">8.3 Factory / FORGE PegInsert</h2>
+<p>定位：</p>
+<blockquote class="blockquote">
+<p>接触丰富装配任务，不是传统显式力控算法。</p>
+</blockquote>
+<p>Factory：</p>
+<p><span class="math display">\[
+\text{RL policy}
+\rightarrow
+\Delta x,\Delta R
+\rightarrow
+x_{\mathrm{target}},R_{\mathrm{target}}
+\rightarrow
+\text{task-space impedance-like torque control}
+\]</span></p>
+<p>FORGE：</p>
+<p><span class="math display">\[
+\text{force sensing}
++
+\text{force threshold}
++
+\text{excessive force penalty}
++
+\text{RL policy}
++
+\text{task-space impedance-like control}
+\]</span></p>
+<p>意义：</p>
+<ul>
+<li>理解 peg-in-hole 为什么需要柔顺控制；</li>
+<li>理解力觉如何进入 RL；</li>
+<li>理解接触任务中仿真和真实差异。</li>
+</ul>
+<hr>
+</section>
+</section>
+<section id="九20-个问题" class="level1">
+<h1>九、20 个问题</h1>
+<section id="a.-算法选择" class="level2">
+<h2 class="anchored" data-anchor-id="a.-算法选择">A. 算法选择</h2>
+<ol type="1">
+<li>真实机械臂上，直接力控、阻抗控制、导纳控制分别适合什么硬件条件？</li>
+<li>如果机器人只支持位置/速度控制，是否应优先使用导纳控制？</li>
+<li>如果机器人支持 torque control，是否应优先使用 OSC/阻抗控制？</li>
+<li>Hybrid position/force control 在真实任务中是否仍然常用？</li>
+</ol>
+</section>
+<section id="b.-参数调节" class="level2">
+<h2 class="anchored" data-anchor-id="b.-参数调节">B. 参数调节</h2>
+<ol start="5" type="1">
+<li>阻抗参数 <span class="math inline">\(M,B,K\)</span> 有没有标准调参流程？</li>
+<li>变阻抗中，<span class="math inline">\(K\)</span> 和 <span class="math inline">\(B\)</span> 如何协调变化？</li>
+<li>环境刚度未知时，如何选择机器人刚度？</li>
+<li>为什么仿真中稳定的阻抗参数在真实机器人上会振荡？</li>
+</ol>
+</section>
+<section id="c.-接触和稳定性" class="level2">
+<h2 class="anchored" data-anchor-id="c.-接触和稳定性">C. 接触和稳定性</h2>
+<ol start="9" type="1">
+<li>接触瞬间如何避免冲击？</li>
+<li>如何设计自由空间到接触空间的模式切换？</li>
+<li>Passivity / energy tank 在真实系统中是否实用？</li>
+<li>高刚度环境下，力控稳定性的主要限制是什么？</li>
+</ol>
+</section>
+<section id="d.-传感和估计" class="level2">
+<h2 class="anchored" data-anchor-id="d.-传感和估计">D. 传感和估计</h2>
+<ol start="13" type="1">
+<li>六维力传感器、关节力矩传感器、电流估计，实际哪个最可靠？</li>
+<li>没有力传感器时，如何估计外力？</li>
+<li>摩擦和接触力如何区分？</li>
+<li>力信号滤波和控制稳定性如何权衡？</li>
+</ol>
+</section>
+<section id="e.-学习与仿真" class="level2">
+<h2 class="anchored" data-anchor-id="e.-学习与仿真">E. 学习与仿真</h2>
+<ol start="17" type="1">
+<li>RL policy 应该输出末端目标、阻抗参数、力阈值还是关节 torque？</li>
+<li>Force-aware RL 和传统力控如何结合？</li>
+<li>Isaac Lab 里的接触力和真实机器人接触力差距主要在哪里？</li>
+<li>学习型变阻抗如何保证安全和稳定？</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="十最核心的-5-个问题" class="level1">
+<h1>十、最核心的 5 个问题</h1>
+<p>如果交流时间有限，我应该优先问：</p>
+<ol type="1">
+<li><p><strong>真实机械臂只支持位置/速度控制时，应该如何实现稳定力控？是导纳控制最合适吗？</strong></p></li>
+<li><p><strong>阻抗控制中的 <span class="math inline">\(M,B,K\)</span> 在真实接触任务中如何系统调参？有没有工程流程？</strong></p></li>
+<li><p><strong>接触瞬间如何稳定切换？如何避免从自由空间进入接触时的冲击和振荡？</strong></p></li>
+<li><p><strong>学习方法在力控中最适合输出什么？末端目标、阻抗参数、力目标，还是 torque？</strong></p></li>
+<li><p><strong>水下机械臂中，如何区分真实接触力和水动力扰动？阻抗/导纳参数是否必须重新辨识？</strong></p></li>
+</ol>
+<hr>
+</section>
+<section id="十一目前我的理解总结" class="level1">
+<h1>十一、目前我的理解总结</h1>
+<p>我目前对力控算法的理解可以总结为：</p>
+<ol type="1">
+<li><strong>直接力控</strong>关注力误差闭环，但单独使用容易受环境刚度影响。</li>
+<li><strong>混合位置/力控制</strong>关注方向选择，适合明确约束的接触任务。</li>
+<li><strong>阻抗控制</strong>关注机器人表现出的力-运动关系，是接触任务中最核心的方法之一。</li>
+<li><strong>导纳控制</strong>适合底层位置控制机器人，是工业机械臂中非常实用的路线。</li>
+<li><strong>OSC</strong>是任务空间动力学控制框架，可以实现阻抗、wrench 控制和力/位混合。</li>
+<li><strong>变阻抗/学习型阻抗</strong>是当前前沿方向，但必须处理稳定性和 passivity。</li>
+<li><strong>Factory/FORGE</strong>不是传统显式力控，而是 RL 接触装配环境，底层仍依赖任务空间阻抗式控制。</li>
+<li><strong>水下机械臂力控</strong>比陆地更难，因为外力中混入水阻、附加质量、浮力残差、洋流和浮动基座耦合。</li>
+</ol>
+<p>重点交流：</p>
+<blockquote class="blockquote">
+<p><strong>力控算法从理论公式落地到真实机器人时，最难的不是写出控制律，而是处理底层力矩能力、接触检测、传感噪声、参数调节、稳定性证明、仿真到真实差距，以及复杂环境中的外力分离。</strong></p>
+</blockquote>
+<hr>
+</section>
+<section id="参考资料" class="level1">
+<h1>参考资料</h1>
+<ol type="1">
+<li><p>Hogan, N. “Impedance Control: An Approach to Manipulation: Part I—Theory.” Journal of Dynamic Systems, Measurement, and Control, 1985.<br>
+https://cir.nii.ac.jp/crid/1362825894544758272</p></li>
+<li><p>Raibert, M. H., Craig, J. J. “Hybrid Position/Force Control of Manipulators.” Journal of Dynamic Systems, Measurement, and Control, 1981.<br>
+https://cir.nii.ac.jp/crid/1360292620461325056</p></li>
+<li><p>Khatib, O. “A Unified Approach for Motion and Force Control of Robot Manipulators: The Operational Space Formulation.” IEEE Journal on Robotics and Automation, 1987.<br>
+https://khatib.stanford.edu/publications/pdfs/Khatib_1987_RA.pdf</p></li>
+<li><p>Abu-Dakka, F. J., Saveriano, M. “Variable Impedance Control and Learning—A Review.” Frontiers in Robotics and AI, 2020.<br>
+https://www.frontiersin.org/articles/10.3389/frobt.2020.590681/full</p></li>
+<li><p>Isaac Lab Documentation: Environments, Factory and FORGE contact-rich manipulation tasks.<br>
+https://isaac-sim.github.io/IsaacLab/main/source/overview/environments.html</p></li>
+<li><p>Isaac Lab Documentation: Operational Space Controller tutorial.<br>
+https://isaac-sim.github.io/IsaacLab/main/source/tutorials/05_controllers/run_osc.html</p></li>
+<li><p>Sivčev, S., Coleman, J., Omerdić, E., Dooly, G., Toal, D. “Underwater Manipulators: A Review.” Ocean Engineering, 2018.<br>
+https://pure.ul.ie/en/publications/underwater-manipulators-a-review/</p></li>
+<li><p>Chang, Z., Zhang, Y., Zheng, F., Zheng, Z., Wang, J. “Research Progress of Underwater Vehicle-Manipulator Systems: Configuration, Modeling and Control.” Journal of Mechanical Engineering, 2020.<br>
+https://www.cjmenet.com.cn/CN/10.3901/JME.2020.19.053</p></li>
+</ol>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

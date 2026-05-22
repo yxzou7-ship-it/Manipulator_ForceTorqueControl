@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="邹宇翔">
+<meta name="dcterms.date" content="2026-05-22">
+
+<title>水下机械臂力控交流问题</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="questions_files/libs/clipboard/clipboard.min.js"></script>
+<script src="questions_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="questions_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="questions_files/libs/quarto-html/popper.min.js"></script>
+<script src="questions_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="questions_files/libs/quarto-html/anchor.min.js"></script>
+<link href="questions_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="questions_files/libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="questions_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="questions_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="questions_files/libs/bootstrap/bootstrap-67270d1595a62d14f123c043d4fb2f18.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#交流背景" id="toc-交流背景" class="nav-link active" data-scroll-target="#交流背景"><span class="header-section-number">1</span> 交流背景</a>
+  <ul class="collapse">
+  <li><a href="#实验视频展示" id="toc-实验视频展示" class="nav-link" data-scroll-target="#实验视频展示"><span class="header-section-number">1.1</span> 实验视频展示</a></li>
+  </ul></li>
+  <li><a href="#想请教的总共6个问题" id="toc-想请教的总共6个问题" class="nav-link" data-scroll-target="#想请教的总共6个问题"><span class="header-section-number">2</span> 想请教的总共6个问题</a>
+  <ul class="collapse">
+  <li><a href="#现在做机械臂力矩控制哪些仿真平台和开源代码最值得上手" id="toc-现在做机械臂力矩控制哪些仿真平台和开源代码最值得上手" class="nav-link" data-scroll-target="#现在做机械臂力矩控制哪些仿真平台和开源代码最值得上手"><span class="header-section-number">2.1</span> 1. 现在做机械臂力矩控制，哪些仿真平台和开源代码最值得上手？</a></li>
+  <li><a href="#仿真中的-torque-control-和真实机器人上的力矩控制到底差在哪里" id="toc-仿真中的-torque-control-和真实机器人上的力矩控制到底差在哪里" class="nav-link" data-scroll-target="#仿真中的-torque-control-和真实机器人上的力矩控制到底差在哪里"><span class="header-section-number">2.2</span> 2. 仿真中的 torque control 和真实机器人上的力矩控制到底差在哪里？</a></li>
+  <li><a href="#力矩控制和位置速度控制在机械臂系统辨识上有什么本质差别" id="toc-力矩控制和位置速度控制在机械臂系统辨识上有什么本质差别" class="nav-link" data-scroll-target="#力矩控制和位置速度控制在机械臂系统辨识上有什么本质差别"><span class="header-section-number">2.3</span> 3. 力矩控制和位置/速度控制，在机械臂系统辨识上有什么本质差别？</a></li>
+  <li><a href="#从-isaac-sim-isaac-lab-里的-rl-策略到真实机械臂应该怎么部署和迁移" id="toc-从-isaac-sim-isaac-lab-里的-rl-策略到真实机械臂应该怎么部署和迁移" class="nav-link" data-scroll-target="#从-isaac-sim-isaac-lab-里的-rl-策略到真实机械臂应该怎么部署和迁移"><span class="header-section-number">2.4</span> 4. 从 Isaac Sim / Isaac Lab 里的 RL 策略到真实机械臂，应该怎么部署和迁移？</a></li>
+  <li><a href="#水下机械臂里怎么区分真实接触力和水动力扰动" id="toc-水下机械臂里怎么区分真实接触力和水动力扰动" class="nav-link" data-scroll-target="#水下机械臂里怎么区分真实接触力和水动力扰动"><span class="header-section-number">2.5</span> 5. 水下机械臂里，怎么区分真实接触力和水动力扰动？</a></li>
+  <li><a href="#如果要做真实水下机械臂力控硬件和控制架构应该怎么选" id="toc-如果要做真实水下机械臂力控硬件和控制架构应该怎么选" class="nav-link" data-scroll-target="#如果要做真实水下机械臂力控硬件和控制架构应该怎么选"><span class="header-section-number">2.6</span> 6. 如果要做真实水下机械臂力控，硬件和控制架构应该怎么选？</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">水下机械臂力控交流问题</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>邹宇翔 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 22, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="交流背景" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> 交流背景</h1>
+<p>我目前主要在做水下机械臂力控相关的学习和实验，已经在 Isaac Sim / Isaac Lab 中跑过 Factory 接触装配任务，并对 RL 训练和可视化流程有了初步了解。</p>
+<section id="实验视频展示" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="实验视频展示"><span class="header-section-number">1.1</span> 实验视频展示</h2>
+<div style="margin-bottom: 2rem;">
+  <h4 class="anchored">PegInsert</h4>
+  <video controls="" style="display:block; width:900px; max-width:100%; height:auto;">
+    <source src="videos/peginsert.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+<div style="margin-bottom: 2rem;">
+  <h4 class="anchored">GearMesh</h4>
+  <video controls="" style="display:block; width:900px; max-width:100%; height:auto;">
+    <source src="videos/gearmesh.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+
+<div style="margin-bottom: 2rem;">
+  <h4 class="anchored">NutThread</h4>
+  <video controls="" style="display:block; width:900px; max-width:100%; height:auto;">
+    <source src="videos/nutthread.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+</div>
+<p>上面仅是我刚开始接触机械臂力控仿真，所以首先想请教汤博士哪些仿真平台和代码仓库值得上手？ 同时还有些问题：比如力矩控制到底在系统辨识和真实控制中有什么优势，仿真训练出来的策略怎么往真实机械臂上迁移，以及水下环境里力控最容易出问题的地方等。</p>
+</section>
+</section>
+<section id="想请教的总共6个问题" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> 想请教的总共6个问题</h1>
+<section id="现在做机械臂力矩控制哪些仿真平台和开源代码最值得上手" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="现在做机械臂力矩控制哪些仿真平台和开源代码最值得上手"><span class="header-section-number">2.1</span> 1. 现在做机械臂力矩控制，哪些仿真平台和开源代码最值得上手？</h2>
+<p>我现在已经用过 Isaac Sim / Isaac Lab，但对整个生态还不够清楚。想问下如果目标是学习和实现机械臂力矩控制、阻抗控制、OSC 或接触操作，哪些平台和开源项目最值得我直接上手跑实验？</p>
+<p>我比较关心：</p>
+<ul>
+<li>哪些平台是真的适合做力矩控制，而不是只是在高层封装了位置/速度控制？</li>
+<li>Isaac Lab、MuJoCo、Drake、Pinocchio、robosuite、libfranka / franka_ros 这些里面，老师更推荐我先看哪几个？</li>
+<li>有没有比较经典的开源代码，适合学习 Franka / Panda 这类机械臂的阻抗控制、OSC 或力矩控制？</li>
+<li>如果后面要做水下机械臂，是不是可以先从陆地机械臂的平台和代码改起？</li>
+</ul>
+<p>我希望得到一个比较现实的上手路线，比如先跑哪个 demo，看哪个控制器的源码，哪些平台暂时不用花太多时间。想知道哪些平台更适合学习力矩层级控制、OSC、笛卡尔坐标系阻抗和接触操作的源码实现</p>
+<hr>
+</section>
+<section id="仿真中的-torque-control-和真实机器人上的力矩控制到底差在哪里" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="仿真中的-torque-control-和真实机器人上的力矩控制到底差在哪里"><span class="header-section-number">2.2</span> 2. 仿真中的 torque control 和真实机器人上的力矩控制到底差在哪里？</h2>
+<p>我现在有一个疑问：很多仿真平台都说支持 torque control，但我不太确定这里的 torque action 是不是直接作用在关节上的力矩。 有些平台里，控制输入可能不是直接施加到关节上的力矩，而是会先经过执行器模型、关节驱动机制或 PD 控制器，再转换成实际施加到关节上的力矩。接触时，物理引擎还会通过接触求解器计算接触力、摩擦力和约束力。 主要问题：</p>
+<ul>
+<li>在一个仿真平台里，如何判断动作是否真的是直接关节力矩输入？</li>
+<li>如果平台内部还有关节驱动或PD控制器，那么它和真正力矩控制有什么区别？</li>
+<li>仿真中的执行器模型通常会考虑哪些因素，比如力矩限幅、延迟、摩擦、速度限制？</li>
+<li>接触求解器算出来的接触力，和电机输出转矩是什么关系？</li>
+<li>如果我要做阻抗控制或 OSC，是应该自己输出关节力矩，还是用平台自带的阻抗/OSC controller？</li>
+</ul>
+<hr>
+</section>
+<section id="力矩控制和位置速度控制在机械臂系统辨识上有什么本质差别" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="力矩控制和位置速度控制在机械臂系统辨识上有什么本质差别"><span class="header-section-number">2.3</span> 3. 力矩控制和位置/速度控制，在机械臂系统辨识上有什么本质差别？</h2>
+<p>这是我一直比较关心的问题。 直觉上，力矩控制好像更适合做动力学辨识，因为输入更接近动力学方程里的广义力。但很多真实机械臂只开放位置或速度接口，底层控制器又是黑箱，所以我不太清楚两者在系统辨识上到底差别有多大。</p>
+<p>主要问题：</p>
+<ul>
+<li>如果有力矩控制接口，是否真的更容易辨识惯量、质心、摩擦、负载等参数？</li>
+<li>位置/速度控制下，底层闭环会不会掩盖真实动力学？</li>
+<li>如果机器人只有位置/速度接口，还有没有可靠的辨识方法？</li>
+<li>对水下机械臂来说，力矩控制是否更有利于辨识水阻、附加质量和浮力残差？</li>
+<li>但如果电流到输出力矩之间还有减速器效率、油封摩擦和回差，这会不会反而让力矩辨识变得很难？</li>
+</ul>
+<hr>
+</section>
+<section id="从-isaac-sim-isaac-lab-里的-rl-策略到真实机械臂应该怎么部署和迁移" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="从-isaac-sim-isaac-lab-里的-rl-策略到真实机械臂应该怎么部署和迁移"><span class="header-section-number">2.4</span> 4. 从 Isaac Sim / Isaac Lab 里的 RL 策略到真实机械臂，应该怎么部署和迁移？</h2>
+<p>我已经做了一些 Isaac Sim / Isaac Lab Factory 相关的接触任务训练和可视化，但还没有真实机器人部署经验。</p>
+<p>想请教从仿真里的RL策略到真实机械臂，一般应该怎么走？</p>
+<p>主要问题：</p>
+<ul>
+<li>策略最好输出什么？关节力矩、末端位姿增量、期望力、阻抗参数，还是接触模式？</li>
+<li>真实系统里是不是通常不会让 RL 直接输出力矩，而是让它输出高层目标，底层仍然用阻抗/导纳/位置控制？</li>
+<li>仿真里的接触力、成功率和真实接触任务之间，最容易差在哪里？</li>
+<li>控制频率、动作延迟、传感器噪声和安全限制应该怎么处理？</li>
+<li>如果目标是水下机械臂，水动力、浮力残差、油封摩擦和拖缆这些因素应该怎么放进sim-to-real流程？</li>
+</ul>
+<p>最想了解的是：我现在做的仿真RL工作，哪些部分对真实系统有参考价值，哪些部分后面必须靠真实实验重新验证。</p>
+<hr>
+</section>
+<section id="水下机械臂里怎么区分真实接触力和水动力扰动" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="水下机械臂里怎么区分真实接触力和水动力扰动"><span class="header-section-number">2.5</span> 5. 水下机械臂里，怎么区分真实接触力和水动力扰动？</h2>
+<p>这是我觉得水下力控里最核心、也最难的问题。</p>
+<p>在陆地机械臂中，如果模型和摩擦补偿较好，外力/力矩残差更容易被解释为接触力；但在水下，残差中还会显著混入水阻、附加质量、浮力残差、洋流和拖缆等因素。</p>
+<p>主要问题：</p>
+<ul>
+<li>真实水下系统里，一般怎么区分接触力和水动力扰动？</li>
+<li>是否必须先做无接触水下运动实验，建立水动力或残差模型？</li>
+<li>DOB、ESO、momentum 观测器这类方法在水下机械臂里是否实用？</li>
+<li>末端六维力传感器的数据能不能直接用于导纳控制，还是必须先做补偿和滤波？</li>
+<li>如果机械臂装在 ROV/AUV 上，基座运动会让力估计复杂到什么程度？</li>
+</ul>
+<hr>
+</section>
+<section id="如果要做真实水下机械臂力控硬件和控制架构应该怎么选" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="如果要做真实水下机械臂力控硬件和控制架构应该怎么选"><span class="header-section-number">2.6</span> 6. 如果要做真实水下机械臂力控，硬件和控制架构应该怎么选？</h2>
+<p>一个更偏工程的问题：如果后面要做真实水下机械臂力控，应该如何选择关节电机、传感器和底层控制架构？</p>
+<p>主要问题：</p>
+<ul>
+<li>如果关节电机可以输入目标电流，怎样判断它是否真的适合做力矩控制？</li>
+<li>电流环带宽、力矩常数标定、减速器效率、油封摩擦、回差这些因素，哪个最容易成为瓶颈？</li>
+<li>只靠电机电流估计力矩是否可靠？有没有必要加关节力矩传感器或末端六维力传感器？</li>
+<li>高减速比减速器和水下密封结构会不会让力矩透明度很差？</li>
+<li>第一版真实系统更适合做力矩控制+阻抗控制/OSC，还是位置/速度控制 + 导纳控制？</li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
